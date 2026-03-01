@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "input": "node src/generateCodes.js",
+    "codes": "node src/generateCodes.js",
     "merkle": "node src/generateMerkleTree.js"
   },
   "keywords": [],

@@ -14,7 +14,7 @@ process.argv.forEach((arg, i) => {
 });
 
 function randomBytes8() {
-  return crypto.randomBytes(8).toString("hex"); // 16 znaków hex
+  return crypto.randomBytes(8).toString("hex");
 }
 
 const codes = Array.from({ length: count }, randomBytes8);

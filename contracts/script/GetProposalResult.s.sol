@@ -7,10 +7,7 @@ import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
 
 contract GetProposalResult is Script {
     function run(uint256 proposalId) external view {
-        address daoAddress = DevOpsTools.get_most_recent_deployment(
-            "GovernanceDAO",
-            block.chainid
-        );
+        address daoAddress = DevOpsTools.get_most_recent_deployment("GovernanceDAO", block.chainid);
         GovernanceDAO dao = GovernanceDAO(daoAddress);
 
         (

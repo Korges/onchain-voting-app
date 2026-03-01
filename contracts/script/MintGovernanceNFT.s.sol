@@ -14,10 +14,8 @@ contract MintGovernanceNFT is Script {
 
         GovernanceNFT nft = GovernanceNFT(nftAddress);
 
-        uint256 proposalId = 0;
-
         vm.startBroadcast();
-        nft.mint(proposalId);
+        nft.safeMint();
         vm.stopBroadcast();
     }
 }

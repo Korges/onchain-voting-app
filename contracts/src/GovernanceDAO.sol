@@ -24,17 +24,8 @@ contract GovernanceDAO {
         bool exists;
     }
 
-    event ProposalCreated(
-        uint256 indexed proposalId,
-        string description,
-        uint256 startTime
-    );
-    event VoteCast(
-        uint256 indexed proposalId,
-        address indexed voter,
-        uint256 indexed tokenId,
-        bool support
-    );
+    event ProposalCreated(uint256 indexed proposalId, string description, uint256 startTime);
+    event VoteCast(uint256 indexed proposalId, address indexed voter, uint256 indexed tokenId, bool support);
     event ProposalClosed(uint256 indexed proposalId, uint256 endTime);
 
     /*//////////////////////////////////////////////////////////////
@@ -49,9 +40,7 @@ contract GovernanceDAO {
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function createProposal(
-        string calldata description
-    ) external returns (uint256 proposalId) {
+    function createProposal(string calldata description) external returns (uint256 proposalId) {
         proposalId = proposalCounter;
 
         proposals[proposalId] = Proposal({
@@ -81,7 +70,7 @@ contract GovernanceDAO {
         }
 
         // check NFT is valid for this proposal
-        if (i_governanceNFT.getProposalId(tokenId) != proposalId) {
+        if (i_governanceNFT.getProposalId() != proposalId) {
             revert NFTNotValidForProposal(tokenId, proposalId);
         }
 
@@ -95,10 +84,7 @@ contract GovernanceDAO {
             proposal.votesAgainst++;
         }
 
-        assert(
-            proposal.votesFor + proposal.votesAgainst <=
-                i_governanceNFT.getTokenCounter()
-        );
+        assert(proposal.votesFor + proposal.votesAgainst <= i_governanceNFT.getTokenCounter());
 
         emit VoteCast(proposalId, msg.sender, tokenId, support);
     }
@@ -118,9 +104,7 @@ contract GovernanceDAO {
                              VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getProposal(
-        uint256 proposalId
-    )
+    function getProposal(uint256 proposalId)
         external
         view
         returns (

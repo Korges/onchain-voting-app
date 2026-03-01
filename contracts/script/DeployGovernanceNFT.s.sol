@@ -3,12 +3,15 @@ pragma solidity ^0.8.30;
 
 import {Script} from "forge-std/Script.sol";
 import {GovernanceNFT} from "../src/GovernanceNft.sol";
+import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
 
 contract DeployGovernanceNFT is Script {
-    function run() external returns (GovernanceNFT) {
+    function run() external returns (GovernanceNFT governanceNft) {
         vm.startBroadcast();
-        GovernanceNFT governanceNft = new GovernanceNFT();
+        uint16 proposalId = 0;
+
+        governanceNft = new GovernanceNFT(proposalId);
+
         vm.stopBroadcast();
-        return governanceNft;
     }
 }

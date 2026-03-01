@@ -1,0 +1,25 @@
+name: indexer
+project_type: no-code
+config: {}
+timestamps: null
+networks:
+  - name: anvil
+    chain_id: 31337
+    rpc: http://127.0.0.1:8545 # Can use environment variables too!
+storage:
+  csv:
+    enabled: true
+    path: ./generated_csv
+native_transfers:
+  enabled: false
+contracts:
+  - name: GovernanceNFT
+    details:
+      - network: anvil
+        address: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+        start_block: "0"
+    abi: ./abis/GovernanceNFT.abi.json
+    include_events:
+      - GovernanceNftMinted
+global:
+  health_port: 8080

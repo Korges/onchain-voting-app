@@ -7,10 +7,7 @@ import {GovernanceDAO} from "../src/GovernanceDAO.sol";
 
 contract CreateProposal is Script {
     function run() external {
-        address daoAddress = DevOpsTools.get_most_recent_deployment(
-            "GovernanceDAO",
-            block.chainid
-        );
+        address daoAddress = DevOpsTools.get_most_recent_deployment("GovernanceDAO", block.chainid);
 
         GovernanceDAO dao = GovernanceDAO(daoAddress);
 
