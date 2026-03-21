@@ -7,15 +7,14 @@ import {GovernanceNFT} from "../src/GovernanceNft.sol";
 
 contract MintGovernanceNFT is Script {
     function run() external {
-        address nftAddress = DevOpsTools.get_most_recent_deployment(
-            "GovernanceNFT",
-            block.chainid
-        );
+        address nftAddress = DevOpsTools.get_most_recent_deployment("GovernanceNFT", block.chainid);
 
         GovernanceNFT nft = GovernanceNFT(nftAddress);
 
         vm.startBroadcast();
-        nft.safeMint();
+
+        nft.safeMint(msg.sender);
+
         vm.stopBroadcast();
     }
 }
