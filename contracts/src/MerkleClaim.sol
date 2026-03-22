@@ -6,7 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IGovernanceNFTFactory} from "./IGovernanceNFTFactory.sol";
 
 interface IGovernanceNFT {
-    function mint(address to) external returns (uint256);
+    function safeMint(address to) external returns (uint256);
 }
 
 contract MerkleClaim is Ownable {
@@ -51,7 +51,7 @@ contract MerkleClaim is Ownable {
         bytes32 root = s_merkleRoots[proposalId];
         require(root != bytes32(0), "Root not set");
 
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, code, proposalId));
+        bytes32 leaf = keccak256(abi.encodePacked(proposalId, code));
         require(!claimed[leaf], "Already claimed");
 
         bool valid = MerkleProof.verify(proof, root, leaf);
@@ -62,7 +62,7 @@ contract MerkleClaim is Ownable {
         address nftAddress = factory.getNFTByProposal(proposalId);
         require(nftAddress != address(0), "NFT not found");
 
-        tokenId = IGovernanceNFT(nftAddress).mint(msg.sender);
+        tokenId = IGovernanceNFT(nftAddress).safeMint(msg.sender);
 
         emit Claimed(msg.sender, proposalId, leaf);
     }

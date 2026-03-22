@@ -6,8 +6,18 @@ import {DeployGovernanceNFT} from "./DeployGovernanceNFT.s.sol";
 import {DeployGovernanceNFTFactory} from "./DeployGovernanceNFTFactory.s.sol";
 import {DeployMerkleClaim} from "./DeployMerkleClaim.s.sol";
 import {IGovernanceNFTFactory} from "../src/IGovernanceNFTFactory.sol";
+import {MerkleClaim} from "../src/MerkleClaim.sol";
+import {GovernanceNFT} from "../src/GovernanceNFT.sol";
 
 contract SetupAnvil is Script {
+    bytes32 private constant ROOT = 0xfe7020b2b0cf90904a691f560c99705d17df57a1bdf98f6a6b3b5158a8ec6d39;
+    bytes32 private constant PROOF_ONE = 0xda9e9132aba100b00d62cefaa22ffc89e07ac5fde135acbfd021d5c3ee292495;
+    bytes32 private constant PROOF_TWO = 0x28f1e4d0b47c6d6215f407906d687b29dea56d378287cd75f4522dad2b260a7e;
+    bytes32 private constant PROOF_THREE = 0x0498b792f92b8d02b20e8dd943360964a58a230a8e506cc0a20db66a1dc226e5;
+    bytes32 private constant PROOF_FOUR = 0x768e513bd6f348de1f66c42a029209c19f4a85fa5313443313fb7c84dcdbbce8;
+
+    bytes32[] private proof = [PROOF_ONE, PROOF_TWO, PROOF_THREE, PROOF_FOUR];
+
     DeployGovernanceNFT deployGovernanceNFT;
     DeployGovernanceNFTFactory deployGovernanceNFTFactory;
     DeployMerkleClaim deployMerkleClaim;
@@ -26,10 +36,18 @@ contract SetupAnvil is Script {
         address merkleClaim = address(deployMerkleClaim.run());
         console.log("MerkleClaim deployed at:", merkleClaim);
 
-        // Wywołanie createGovernanceNFT z proposalId = 1
         vm.startBroadcast();
-        address clonedNFT = IGovernanceNFTFactory(governanceNftFactory).createGovernanceNFT(1);
-        vm.stopBroadcast();
+        uint256 proposalId = 1;
+        
+        address clonedNFT = IGovernanceNFTFactory(governanceNftFactory).createGovernanceNFT(proposalId);
         console.log("Cloned GovernanceNFT for proposal 1 at:", clonedNFT);
+
+        // GovernanceNFT(clonedNFT).transferOwnership(merkleClaim);
+        MerkleClaim(merkleClaim).setMerkleRoot(proposalId, ROOT);
+        
+        vm.stopBroadcast();
+
+        uint256 tokenId = MerkleClaim(merkleClaim).claim(proposalId, "7d2f9dcd244a2304", proof);
+        console.log("Token ID:", tokenId);
     }
 }

@@ -9,7 +9,7 @@ const userCodes = JSON.parse(
 );
 
 const leaves = userCodes.map(code =>
-  keccak256(solidityPacked(["uint256", "bytes8"], [proposalId, "0x" + code]))
+  keccak256(solidityPacked(["uint256", "string"], [proposalId, code]))
 );
 
 const tree = new MerkleTree(leaves, keccak256, { sortPairs: true });
