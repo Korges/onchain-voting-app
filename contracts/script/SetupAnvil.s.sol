@@ -10,6 +10,7 @@ import {MerkleClaim} from "../src/MerkleClaim.sol";
 import {GovernanceNFT} from "../src/GovernanceNFT.sol";
 
 contract SetupAnvil is Script {
+    uint256 private constant CLAIMING_ADDRESS = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
     bytes32 private constant ROOT = 0xfe7020b2b0cf90904a691f560c99705d17df57a1bdf98f6a6b3b5158a8ec6d39;
     bytes32 private constant PROOF_ONE = 0xda9e9132aba100b00d62cefaa22ffc89e07ac5fde135acbfd021d5c3ee292495;
     bytes32 private constant PROOF_TWO = 0x28f1e4d0b47c6d6215f407906d687b29dea56d378287cd75f4522dad2b260a7e;
@@ -30,24 +31,28 @@ contract SetupAnvil is Script {
         address governanceNft = address(deployGovernanceNFT.run());
         console.log("GovernanceNFT deployed at:", governanceNft);
 
-        address governanceNftFactory = address(deployGovernanceNFTFactory.run());
+        address governanceNftFactory = address(deployGovernanceNFTFactory.deploy(governanceNft));
         console.log("GovernanceNFTFactory deployed at:", governanceNftFactory);
 
-        address merkleClaim = address(deployMerkleClaim.run());
+        address merkleClaim = address(deployMerkleClaim.deploy(governanceNftFactory));
         console.log("MerkleClaim deployed at:", merkleClaim);
 
         vm.startBroadcast();
+
         uint256 proposalId = 1;
-        
+
         address clonedNFT = IGovernanceNFTFactory(governanceNftFactory).createGovernanceNFT(proposalId);
         console.log("Cloned GovernanceNFT for proposal 1 at:", clonedNFT);
 
-        // GovernanceNFT(clonedNFT).transferOwnership(merkleClaim);
+        GovernanceNFT(clonedNFT).transferOwnership(merkleClaim);
         MerkleClaim(merkleClaim).setMerkleRoot(proposalId, ROOT);
-        
+
         vm.stopBroadcast();
 
+        vm.startBroadcast(CLAIMING_ADDRESS);
         uint256 tokenId = MerkleClaim(merkleClaim).claim(proposalId, "7d2f9dcd244a2304", proof);
+        vm.stopBroadcast();
+
         console.log("Token ID:", tokenId);
     }
 }

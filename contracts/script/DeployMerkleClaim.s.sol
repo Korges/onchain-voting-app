@@ -6,14 +6,18 @@ import {MerkleClaim} from "../src/MerkleClaim.sol";
 import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
 
 contract DeployMerkleClaim is Script {
-    function run() external returns (MerkleClaim merkleClaim) {
-        address governanceNftFactoryAddress =
-            DevOpsTools.get_most_recent_deployment("GovernanceNFTFactory", block.chainid);
-
+    function deploy(address governanceNftFactoryAddress) public returns (MerkleClaim merkleClaim) {
         vm.startBroadcast();
 
         merkleClaim = new MerkleClaim(governanceNftFactoryAddress);
 
         vm.stopBroadcast();
+    }
+
+    function run() external returns (MerkleClaim merkleClaim) {
+        address governanceNftFactoryAddress =
+            DevOpsTools.get_most_recent_deployment("GovernanceNFTFactory", block.chainid);
+
+        merkleClaim = deploy(governanceNftFactoryAddress);
     }
 }
