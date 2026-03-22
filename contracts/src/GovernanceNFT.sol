@@ -4,9 +4,11 @@ pragma solidity ^0.8.30;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract GovernanceNFT is ERC721, Ownable {
-  bool private initialized;
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+contract GovernanceNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable {
     uint256 private s_tokenCounter;
     uint256 private s_proposalId;
 
@@ -16,20 +18,24 @@ contract GovernanceNFT is ERC721, Ownable {
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor() ERC721("GovernanceNFT", "GT") Ownable(msg.sender) {}
+    constructor() {
+        _disableInitializers();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            INITIALIZER
+    //////////////////////////////////////////////////////////////*/
+
+    function initialize(uint256 _proposalId, address owner_) external initializer {
+        __ERC721_init("GovernanceNFT", "GT");
+        __Ownable_init(owner_);
+
+        s_proposalId = _proposalId;
+    }
 
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-
-    function initialize(uint256 _proposalId, address owner_) external {
-        require(!initialized, "Already initialized");
-        initialized = true;
-
-        _transferOwnership(owner_);
-
-        s_proposalId = _proposalId;
-    }
 
     function safeMint(address to) public onlyOwner returns (uint256 tokenId) {
         tokenId = s_tokenCounter++;
@@ -44,5 +50,9 @@ contract GovernanceNFT is ERC721, Ownable {
 
     function getTokenCounter() external view returns (uint256) {
         return s_tokenCounter;
+    }
+
+    function getProposalId() external view returns (uint256) {
+        return s_proposalId;
     }
 }
