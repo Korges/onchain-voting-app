@@ -9,8 +9,17 @@ import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC72
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract GovernanceNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable {
+
+    /*//////////////////////////////////////////////////////////////
+                                STORAGE
+    //////////////////////////////////////////////////////////////*/
+
     uint256 private s_tokenCounter;
     uint256 private s_proposalId;
+
+    /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
 
     event GovernanceNftMinted(address indexed to, uint256 indexed tokenId);
 
@@ -23,7 +32,7 @@ contract GovernanceNFT is Initializable, ERC721Upgradeable, OwnableUpgradeable {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            INITIALIZER
+                              INITIALIZER
     //////////////////////////////////////////////////////////////*/
 
     function initialize(uint256 _proposalId, address owner_) external initializer {
