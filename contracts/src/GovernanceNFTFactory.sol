@@ -23,10 +23,7 @@ contract GovernanceNFTFactory is Ownable {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event GovernanceNFTCreated(
-        uint256 indexed proposalId,
-        address indexed nftAddress
-    );
+    event GovernanceNFTCreated(uint256 indexed proposalId, address indexed nftAddress);
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -41,13 +38,8 @@ contract GovernanceNFTFactory is Ownable {
                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function createGovernanceNFT(
-        uint256 _proposalId
-    ) external onlyOwner returns (address clone) {
-        require(
-            _proposalToNFT[_proposalId] == address(0),
-            "Proposal already has NFT"
-        );
+    function createGovernanceNFT(uint256 _proposalId) external onlyOwner returns (address clone) {
+        require(_proposalToNFT[_proposalId] == address(0), "Proposal already has NFT");
 
         clone = implementation.clone();
 
@@ -64,9 +56,7 @@ contract GovernanceNFTFactory is Ownable {
                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getNFTByProposal(
-        uint256 proposalId
-    ) external view returns (address) {
+    function getNFTByProposal(uint256 proposalId) external view returns (address) {
         return _proposalToNFT[proposalId];
     }
 

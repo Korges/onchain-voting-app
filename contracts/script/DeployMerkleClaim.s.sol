@@ -7,7 +7,8 @@ import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
 
 contract DeployMerkleClaim is Script {
     function run() external returns (MerkleClaim merkleClaim) {
-        address governanceNftFactoryAddress = DevOpsTools.get_most_recent_deployment("GovernanceNFTFactory", block.chainid); 
+        address governanceNftFactoryAddress =
+            DevOpsTools.get_most_recent_deployment("GovernanceNFTFactory", block.chainid);
 
         vm.startBroadcast();
 

@@ -3,19 +3,13 @@ pragma solidity ^0.8.30;
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IGovernanceNFTFactory} from "./IGovernanceNFTFactory.sol";
 
 interface IGovernanceNFT {
     function mint(address to) external returns (uint256);
 }
 
-interface IGovernanceNFTFactory {
-    function getNFTByProposal(
-        uint256 proposalId
-    ) external view returns (address);
-}
-
 contract MerkleClaim is Ownable {
-  
     /*//////////////////////////////////////////////////////////////
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
@@ -28,11 +22,7 @@ contract MerkleClaim is Ownable {
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event Claimed(
-        address indexed user,
-        uint256 indexed proposalId,
-        bytes32 leaf
-    );
+    event Claimed(address indexed user, uint256 indexed proposalId, bytes32 leaf);
 
     event RootUpdated(uint256 indexed proposalId, bytes32 root);
 
@@ -49,26 +39,19 @@ contract MerkleClaim is Ownable {
                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function setMerkleRoot(
-        uint256 proposalId,
-        bytes32 root
-    ) external onlyOwner {
+    function setMerkleRoot(uint256 proposalId, bytes32 root) external onlyOwner {
         s_merkleRoots[proposalId] = root;
         emit RootUpdated(proposalId, root);
     }
 
-    function claim(
-        uint256 proposalId,
-        string calldata code,
-        bytes32[] calldata proof
-    ) external returns (uint256 tokenId){
-
+    function claim(uint256 proposalId, string calldata code, bytes32[] calldata proof)
+        external
+        returns (uint256 tokenId)
+    {
         bytes32 root = s_merkleRoots[proposalId];
         require(root != bytes32(0), "Root not set");
 
-        bytes32 leaf = keccak256(
-            abi.encodePacked(msg.sender, code, proposalId)
-        );
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, code, proposalId));
         require(!claimed[leaf], "Already claimed");
 
         bool valid = MerkleProof.verify(proof, root, leaf);
@@ -83,5 +66,4 @@ contract MerkleClaim is Ownable {
 
         emit Claimed(msg.sender, proposalId, leaf);
     }
-
 }
