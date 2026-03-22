@@ -9,18 +9,24 @@ interface IGovernanceNFT {
 }
 
 interface IGovernanceNFTFactory {
-    function getNFTByProposal(uint256 proposalId) external view returns (address);
+    function getNFTByProposal(
+        uint256 proposalId
+    ) external view returns (address);
 }
 
 contract MerkleClaim is Ownable {
+  
+    /*//////////////////////////////////////////////////////////////
+                                STORAGE
+    //////////////////////////////////////////////////////////////*/
 
+    mapping(uint256 => bytes32) private s_merkleRoots;
+    mapping(bytes32 => bool) private claimed;
+    IGovernanceNFTFactory private factory;
 
-    mapping(uint256 => bytes32) public s_merkleRoots;
-
-
-    mapping(bytes32 => bool) public claimed;
-
-    IGovernanceNFTFactory public factory;
+    /*//////////////////////////////////////////////////////////////
+                                EVENTS
+    //////////////////////////////////////////////////////////////*/
 
     event Claimed(
         address indexed user,
@@ -28,14 +34,20 @@ contract MerkleClaim is Ownable {
         bytes32 leaf
     );
 
-    event RootUpdated(
-        uint256 indexed proposalId,
-        bytes32 root
-    );
+    event RootUpdated(uint256 indexed proposalId, bytes32 root);
+
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
 
     constructor(address _factory) Ownable(msg.sender) {
+        require(_factory != address(0), "Invalid factory");
         factory = IGovernanceNFTFactory(_factory);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                            EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function setMerkleRoot(
         uint256 proposalId,
@@ -49,7 +61,7 @@ contract MerkleClaim is Ownable {
         uint256 proposalId,
         string calldata code,
         bytes32[] calldata proof
-    ) external {
+    ) external returns (uint256 tokenId){
 
         bytes32 root = s_merkleRoots[proposalId];
         require(root != bytes32(0), "Root not set");
@@ -57,25 +69,19 @@ contract MerkleClaim is Ownable {
         bytes32 leaf = keccak256(
             abi.encodePacked(msg.sender, code, proposalId)
         );
-
         require(!claimed[leaf], "Already claimed");
 
-        bool valid = MerkleProof.verify(
-            proof,
-            root,
-            leaf
-        );
-
+        bool valid = MerkleProof.verify(proof, root, leaf);
         require(valid, "Invalid proof");
 
         claimed[leaf] = true;
 
         address nftAddress = factory.getNFTByProposal(proposalId);
-
         require(nftAddress != address(0), "NFT not found");
 
-        IGovernanceNFT(nftAddress).mint(msg.sender);
+        tokenId = IGovernanceNFT(nftAddress).mint(msg.sender);
 
         emit Claimed(msg.sender, proposalId, leaf);
     }
+
 }
