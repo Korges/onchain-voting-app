@@ -4,8 +4,9 @@ pragma solidity ^0.8.30;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {GovernanceNFT} from "./GovernanceNFT.sol";
+import {IGovernanceNFTFactory} from "./IGovernanceNFTFactory.sol";
 
-contract GovernanceNFTFactory is Ownable {
+contract GovernanceNFTFactory is Ownable, IGovernanceNFTFactory {
     using Clones for address;
 
     /*//////////////////////////////////////////////////////////////

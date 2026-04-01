@@ -1,18 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {GovernanceNFT} from "./GovernanceNFT.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IGovernanceNFTFactory} from "./IGovernanceNFTFactory.sol";
+
+interface IProposalGovernanceNFT {
+    function transferOwnership(address newOwner) external;
+
+    function ownerOf(uint256 tokenId) external view returns (address);
+
+    function getProposalId() external view returns (uint256);
+}
 
 error ProposalDoesNotExist(uint256 proposalId);
+error ProposalNftDoesNotExist(uint256 proposalId);
 error NFTAlreadyUsed(uint256 tokenId);
 error NotNFTOwner(address caller, uint256 tokenId);
 error NFTNotValidForProposal(uint256 tokenId, uint256 proposalId);
 error VotingClosed(uint256 proposalId);
 
-contract GovernanceDAO {
-    GovernanceNFT private immutable i_governanceNFT;
+contract GovernanceDAO is Ownable {
+    IGovernanceNFTFactory private immutable i_governanceNFTFactory;
+    address private immutable i_merkleClaim;
     mapping(uint256 => Proposal) private proposals;
-    mapping(uint256 => bool) private nftUsed;
+    mapping(uint256 => mapping(uint256 => bool)) private nftUsed;
     uint256 private proposalCounter;
 
     struct Proposal {
@@ -32,29 +43,30 @@ contract GovernanceDAO {
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address governanceNftAddress) {
-        i_governanceNFT = GovernanceNFT(governanceNftAddress);
+    constructor(address governanceNFTFactoryAddress, address merkleClaim) Ownable(msg.sender) {
+        i_governanceNFTFactory = IGovernanceNFTFactory(governanceNFTFactoryAddress);
+        i_merkleClaim = merkleClaim;
+        proposalCounter = 1;
     }
 
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function createProposal(string calldata description) external returns (uint256 proposalId) {
-        proposalId = proposalCounter;
+    function createProposal(string calldata description) external onlyOwner returns (address) {
+        uint256 proposalId = proposalCounter;
 
         proposals[proposalId] = Proposal({
-            description: description,
-            votesFor: 0,
-            votesAgainst: 0,
-            startTime: block.timestamp,
-            endTime: 0, // otwarte
-            exists: true
+            description: description, votesFor: 0, votesAgainst: 0, startTime: block.timestamp, endTime: 0, exists: true
         });
 
         proposalCounter++;
 
         emit ProposalCreated(proposalId, description, block.timestamp);
+
+        address nftAddress = i_governanceNFTFactory.createGovernanceNFT(proposalId);
+        IProposalGovernanceNFT(nftAddress).transferOwnership(i_merkleClaim);
+        return nftAddress;
     }
 
     function vote(uint256 proposalId, uint256 tokenId, bool support) external {
@@ -62,34 +74,35 @@ contract GovernanceDAO {
 
         if (!proposal.exists) revert ProposalDoesNotExist(proposalId);
         if (proposal.endTime != 0) revert VotingClosed(proposalId);
-        if (nftUsed[tokenId]) revert NFTAlreadyUsed(tokenId);
+        if (nftUsed[proposalId][tokenId]) revert NFTAlreadyUsed(tokenId);
 
-        // check ownership
-        if (i_governanceNFT.ownerOf(tokenId) != msg.sender) {
+        address proposalNft = i_governanceNFTFactory.getNFTByProposal(proposalId);
+        if (proposalNft == address(0)) {
+            revert ProposalNftDoesNotExist(proposalId);
+        }
+
+        IProposalGovernanceNFT governanceNft = IProposalGovernanceNFT(proposalNft);
+
+        if (governanceNft.ownerOf(tokenId) != msg.sender) {
             revert NotNFTOwner(msg.sender, tokenId);
         }
 
-        // check NFT is valid for this proposal
-        if (i_governanceNFT.getProposalId() != proposalId) {
+        if (governanceNft.getProposalId() != proposalId) {
             revert NFTNotValidForProposal(tokenId, proposalId);
         }
 
-        // Mark NFT as used
-        nftUsed[tokenId] = true;
+        nftUsed[proposalId][tokenId] = true;
 
-        // Count vote
         if (support) {
             proposal.votesFor++;
         } else {
             proposal.votesAgainst++;
         }
 
-        assert(proposal.votesFor + proposal.votesAgainst <= i_governanceNFT.getTokenCounter());
-
         emit VoteCast(proposalId, msg.sender, tokenId, support);
     }
 
-    function closeProposal(uint256 proposalId) external {
+    function closeProposal(uint256 proposalId) external onlyOwner {
         Proposal storage proposal = proposals[proposalId];
 
         if (!proposal.exists) revert ProposalDoesNotExist(proposalId);

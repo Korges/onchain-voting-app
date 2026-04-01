@@ -7,6 +7,18 @@ import {GovernanceDAO} from "../src/GovernanceDAO.sol";
 
 contract Vote is Script {
     function run(uint256 proposalId, uint256 tokenId, bool support) external {
+        _vote(proposalId, tokenId, support);
+    }
+
+    function voteFor(uint256 proposalId, uint256 tokenId) external {
+        _vote(proposalId, tokenId, true);
+    }
+
+    function voteAgainst(uint256 proposalId, uint256 tokenId) external {
+        _vote(proposalId, tokenId, false);
+    }
+
+    function _vote(uint256 proposalId, uint256 tokenId, bool support) internal {
         address daoAddress = DevOpsTools.get_most_recent_deployment("GovernanceDAO", block.chainid);
 
         GovernanceDAO dao = GovernanceDAO(daoAddress);

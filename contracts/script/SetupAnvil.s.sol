@@ -5,9 +5,13 @@ import {Script, console} from "forge-std/Script.sol";
 import {DeployGovernanceNFT} from "./DeployGovernanceNFT.s.sol";
 import {DeployGovernanceNFTFactory} from "./DeployGovernanceNFTFactory.s.sol";
 import {DeployMerkleClaim} from "./DeployMerkleClaim.s.sol";
+import {DeployGovernanceDAO} from "./DeployGovernanceDAO.s.sol";
 import {IGovernanceNFTFactory} from "../src/IGovernanceNFTFactory.sol";
+import {GovernanceNFTFactory} from "../src/GovernanceNFTFactory.sol";
 import {MerkleClaim} from "../src/MerkleClaim.sol";
+import {GovernanceDAO} from "../src/GovernanceDAO.sol";
 import {GovernanceNFT} from "../src/GovernanceNFT.sol";
+import {Vote} from "./Vote.s.sol";
 
 contract SetupAnvil is Script {
     uint256 private constant CLAIMING_ADDRESS = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
@@ -22,11 +26,15 @@ contract SetupAnvil is Script {
     DeployGovernanceNFT deployGovernanceNFT;
     DeployGovernanceNFTFactory deployGovernanceNFTFactory;
     DeployMerkleClaim deployMerkleClaim;
+    DeployGovernanceDAO deployGovernanceDAO;
+    Vote vote;
 
     function run() external {
         deployGovernanceNFT = new DeployGovernanceNFT();
         deployGovernanceNFTFactory = new DeployGovernanceNFTFactory();
         deployMerkleClaim = new DeployMerkleClaim();
+        deployGovernanceDAO = new DeployGovernanceDAO();
+        vote = new Vote();
 
         address governanceNft = address(deployGovernanceNFT.run());
         console.log("GovernanceNFT deployed at:", governanceNft);
@@ -37,20 +45,26 @@ contract SetupAnvil is Script {
         address merkleClaim = address(deployMerkleClaim.deploy(governanceNftFactory));
         console.log("MerkleClaim deployed at:", merkleClaim);
 
+        address dao = address(deployGovernanceDAO.deploy(governanceNftFactory, merkleClaim));
+        console.log("GovernanceDAO deployed at:", dao);
+
         vm.startBroadcast();
 
-        uint256 proposalId = 1;
+        // Transfer factory ownership to DAO so it can create NFTs per proposal
+        GovernanceNFTFactory(governanceNftFactory).transferOwnership(dao);
 
-        address clonedNFT = IGovernanceNFTFactory(governanceNftFactory).createGovernanceNFT(proposalId);
-        console.log("Cloned GovernanceNFT for proposal 1 at:", clonedNFT);
+        address proposal_1 =
+            GovernanceDAO(dao).createProposal("Proposal 1: Should we adopt the new on-chain voting mechanism?");
 
-        GovernanceNFT(clonedNFT).transferOwnership(merkleClaim);
-        MerkleClaim(merkleClaim).setMerkleRoot(proposalId, ROOT);
+        MerkleClaim(merkleClaim).setMerkleRoot(1, ROOT);
 
         vm.stopBroadcast();
 
         vm.startBroadcast(CLAIMING_ADDRESS);
-        uint256 tokenId = MerkleClaim(merkleClaim).claim(proposalId, "7d2f9dcd244a2304", proof);
+
+        uint256 tokenId = MerkleClaim(merkleClaim).claim(1, "7d2f9dcd244a2304", proof);
+        GovernanceDAO(dao).vote(1, tokenId, false);
+
         vm.stopBroadcast();
 
         console.log("Token ID:", tokenId);
