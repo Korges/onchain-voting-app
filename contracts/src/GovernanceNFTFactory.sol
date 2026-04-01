@@ -13,12 +13,10 @@ contract GovernanceNFTFactory is Ownable, IGovernanceNFTFactory {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    address public immutable implementation;
-
-    uint256[] private _allProposalIds;
-    mapping(uint256 => address) private _proposalToNFT;
-
-    address[] public clonedContracts;
+    address private immutable i_governanceNFT;
+    uint256[] private s_allProposalIds;
+    mapping(uint256 => address) private s_proposalToNFT;
+    address[] private s_clonedContracts;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -30,9 +28,9 @@ contract GovernanceNFTFactory is Ownable, IGovernanceNFTFactory {
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _implementation) Ownable(msg.sender) {
-        require(_implementation != address(0), "Invalid implementation");
-        implementation = _implementation;
+    constructor(address _governanceNFTAddress) Ownable(msg.sender) {
+        require(_governanceNFTAddress != address(0), "Invalid implementation");
+        i_governanceNFT = _governanceNFTAddress;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -40,15 +38,15 @@ contract GovernanceNFTFactory is Ownable, IGovernanceNFTFactory {
     //////////////////////////////////////////////////////////////*/
 
     function createGovernanceNFT(uint256 _proposalId) external onlyOwner returns (address clone) {
-        require(_proposalToNFT[_proposalId] == address(0), "Proposal already has NFT");
+        require(s_proposalToNFT[_proposalId] == address(0), "Proposal already has NFT");
 
-        clone = implementation.clone();
+        clone = i_governanceNFT.clone();
 
         GovernanceNFT(clone).initialize(_proposalId, msg.sender);
 
-        _proposalToNFT[_proposalId] = clone;
-        _allProposalIds.push(_proposalId);
-        clonedContracts.push(clone);
+        s_proposalToNFT[_proposalId] = clone;
+        s_allProposalIds.push(_proposalId);
+        s_clonedContracts.push(clone);
 
         emit GovernanceNFTCreated(_proposalId, clone);
     }
@@ -58,14 +56,14 @@ contract GovernanceNFTFactory is Ownable, IGovernanceNFTFactory {
     //////////////////////////////////////////////////////////////*/
 
     function getNFTByProposal(uint256 proposalId) external view returns (address) {
-        return _proposalToNFT[proposalId];
+        return s_proposalToNFT[proposalId];
     }
 
     function getAllProposalIds() external view returns (uint256[] memory) {
-        return _allProposalIds;
+        return s_allProposalIds;
     }
 
     function getAllNFTs() external view returns (address[] memory) {
-        return clonedContracts;
+        return s_clonedContracts;
     }
 }

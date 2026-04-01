@@ -22,6 +22,9 @@ error NFTNotValidForProposal(uint256 tokenId, uint256 proposalId);
 error VotingClosed(uint256 proposalId);
 
 contract GovernanceDAO is Ownable {
+    /*//////////////////////////////////////////////////////////////
+                                STORAGE
+    //////////////////////////////////////////////////////////////*/
     IGovernanceNFTFactory private immutable i_governanceNFTFactory;
     address private immutable i_merkleClaimAddress;
     mapping(uint256 => Proposal) private proposals;
@@ -36,6 +39,10 @@ contract GovernanceDAO is Ownable {
         uint256 endTime;
         bool exists;
     }
+
+    /*//////////////////////////////////////////////////////////////
+                                EVENTS
+    //////////////////////////////////////////////////////////////*/
 
     event ProposalCreated(uint256 indexed proposalId, string description, uint256 startTime);
     event VoteCast(uint256 indexed proposalId, address indexed voter, uint256 indexed tokenId, bool support);
