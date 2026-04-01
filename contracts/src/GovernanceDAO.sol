@@ -45,14 +45,14 @@ contract GovernanceDAO is Ownable {
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address governanceNFTFactoryAddress, address merkleClaimAddress) Ownable(msg.sender) {
-        if (governanceNFTFactoryAddress == address(0)) {
+    constructor(address _governanceNFTFactoryAddress, address _merkleClaimAddress) Ownable(msg.sender) {
+        if (_governanceNFTFactoryAddress == address(0)) {
             revert InvalidFactoryAddress();
         }
-        if (merkleClaimAddress == address(0)) revert InvalidMerkleClaimAddress();
+        if (_merkleClaimAddress == address(0)) revert InvalidMerkleClaimAddress();
 
-        i_governanceNFTFactory = IGovernanceNFTFactory(governanceNFTFactoryAddress);
-        i_merkleClaimAddress = merkleClaimAddress;
+        i_governanceNFTFactory = IGovernanceNFTFactory(_governanceNFTFactoryAddress);
+        i_merkleClaimAddress = _merkleClaimAddress;
         proposalCounter = 1;
     }
 
