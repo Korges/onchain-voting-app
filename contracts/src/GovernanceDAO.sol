@@ -14,6 +14,8 @@ interface IProposalGovernanceNFT {
 
 error ProposalDoesNotExist(uint256 proposalId);
 error ProposalNftDoesNotExist(uint256 proposalId);
+error InvalidFactoryAddress();
+error InvalidMerkleClaimAddress();
 error NFTAlreadyUsed(uint256 tokenId);
 error NotNFTOwner(address caller, uint256 tokenId);
 error NFTNotValidForProposal(uint256 tokenId, uint256 proposalId);
@@ -21,7 +23,7 @@ error VotingClosed(uint256 proposalId);
 
 contract GovernanceDAO is Ownable {
     IGovernanceNFTFactory private immutable i_governanceNFTFactory;
-    address private immutable i_merkleClaim;
+    address private immutable i_merkleClaimAddress;
     mapping(uint256 => Proposal) private proposals;
     mapping(uint256 => mapping(uint256 => bool)) private nftUsed;
     uint256 private proposalCounter;
@@ -43,9 +45,14 @@ contract GovernanceDAO is Ownable {
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address governanceNFTFactoryAddress, address merkleClaim) Ownable(msg.sender) {
+    constructor(address governanceNFTFactoryAddress, address merkleClaimAddress) Ownable(msg.sender) {
+        if (governanceNFTFactoryAddress == address(0)) {
+            revert InvalidFactoryAddress();
+        }
+        if (merkleClaimAddress == address(0)) revert InvalidMerkleClaimAddress();
+
         i_governanceNFTFactory = IGovernanceNFTFactory(governanceNFTFactoryAddress);
-        i_merkleClaim = merkleClaim;
+        i_merkleClaimAddress = merkleClaimAddress;
         proposalCounter = 1;
     }
 
@@ -65,7 +72,7 @@ contract GovernanceDAO is Ownable {
         emit ProposalCreated(proposalId, description, block.timestamp);
 
         address nftAddress = i_governanceNFTFactory.createGovernanceNFT(proposalId);
-        IProposalGovernanceNFT(nftAddress).transferOwnership(i_merkleClaim);
+        IProposalGovernanceNFT(nftAddress).transferOwnership(i_merkleClaimAddress);
         return nftAddress;
     }
 
