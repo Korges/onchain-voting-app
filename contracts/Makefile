@@ -17,15 +17,27 @@ deploy-proxy:
 
 createGovernanceNFT:
 	@echo "Creating GovernanceNFT..."
-	@cast send 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 "createGovernanceNFT(uint256)(address)" 1 --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+	@cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "createGovernanceNFT(uint256)(address)" 1 --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+getNFTByProposal:
+	@echo "Getting NFT by proposal ID..."
+	@cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getNFTByProposal(uint256)(address)" 1 --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
 getAllNFTs:
 	@echo "Getting all NFTs..."
-	@cast call 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 "getAllNFTs()(address[])" --rpc-url http://127.0.0.1:8545
+	@cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getAllNFTs()(address[])" --rpc-url http://127.0.0.1:8545
 
 getTokenCounter:
 	@echo "Getting token counter..."
-	@cast call 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 "getTokenCounter()(uint256)" --rpc-url http://127.0.0.1:8545
+	@cast call 0xCafac3dD18aC6c6e92c921884f9E4176737C052c "getTokenCounter()(uint256)" --rpc-url http://127.0.0.1:8545
+
+getNftName:
+	@echo "Getting token name..."
+	@cast call 0xCafac3dD18aC6c6e92c921884f9E4176737C052c "getNftName()(uint256)" --rpc-url http://127.0.0.1:8545
+
+getNftSymbol:
+	@echo "Getting token symbol..."
+	@cast call 0xCafac3dD18aC6c6e92c921884f9E4176737C052c "getNftSymbol()(uint256)" --rpc-url http://127.0.0.1:8545
 
 mint:
 	@echo "Minting GovernanceNFT..."
@@ -49,16 +61,22 @@ mint-governance-nft:
 	@forge script script/MintGovernanceNFT.s.sol $(NETWORK_ARGS)
 	@echo "GovernanceNFT minted"
 
-PROPOSAL_ID ?= 0
+PROPOSAL_ID ?= 1
 TOKEN_ID ?= 0
 SUPPORT ?= true
 
-vote:
+voteFor:
 	@echo "Voting on proposal..."
-	@forge script script/Vote.s.sol --sig "run(uint256,uint256,bool)" $(PROPOSAL_ID) $(TOKEN_ID) $(SUPPORT) $(NETWORK_ARGS)
+	@forge script script/Vote.s.sol --sig "voteFor(uint256,uint256)" $(PROPOSAL_ID) $(TOKEN_ID) $(NETWORK_ARGS)
 	@echo "Voted on proposal"
 
+voteAgainst:
+	@echo "Voting on proposal..."
+	@forge script script/Vote.s.sol --sig "voteAgainst(uint256,uint256)" $(PROPOSAL_ID) $(TOKEN_ID) $(NETWORK_ARGS)
+	@echo "Voted on proposal"
+
+DAO_ADDRESS ?= 0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
+
 result:
-	@echo "Getting proposal result..."
-	@forge script script/GetProposalResult.s.sol --sig "run(uint256)" $(PROPOSAL_ID) $(NETWORK_ARGS)
-	@echo "Got proposal result"
+	@echo "Getting proposal result for proposal $(PROPOSAL_ID) from DAO $(DAO_ADDRESS)..."
+	@cast call $(DAO_ADDRESS) "getProposal(uint256)(string,uint256,uint256,uint256,uint256,bool)" $(PROPOSAL_ID) --rpc-url $(RPC_URL)
