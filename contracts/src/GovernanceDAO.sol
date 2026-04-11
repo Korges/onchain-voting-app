@@ -85,7 +85,7 @@ contract GovernanceDAO is Ownable {
 
     function createProposal(
         string calldata description
-    ) external onlyOwner returns (address) {
+    ) external onlyOwner returns (uint256, address) {
         uint256 proposalId = proposalCounter;
 
         proposals[proposalId] = Proposal({
@@ -107,7 +107,7 @@ contract GovernanceDAO is Ownable {
         IProposalGovernanceNFT(nftAddress).transferOwnership(
             i_governanceNFTRedeemerAddress
         );
-        return nftAddress;
+        return (proposalId, nftAddress);
     }
 
     function vote(uint256 proposalId, uint256 tokenId, bool support) external {
