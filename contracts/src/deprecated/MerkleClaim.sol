@@ -3,7 +3,7 @@ pragma solidity ^0.8.30;
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IGovernanceNFTFactory} from "./IGovernanceNFTFactory.sol";
+import {IGovernanceNFTFactory} from "../IGovernanceNFTFactory.sol";
 
 interface IGovernanceNFT {
     function safeMint(address to) external returns (uint256);
@@ -25,7 +25,11 @@ contract MerkleClaim is Ownable {
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event Claimed(address indexed user, uint256 indexed proposalId, bytes32 leaf);
+    event Claimed(
+        address indexed user,
+        uint256 indexed proposalId,
+        bytes32 leaf
+    );
     event RootUpdated(uint256 indexed proposalId, bytes32 root);
     event RootLocked(uint256 indexed proposalId);
 
@@ -42,16 +46,20 @@ contract MerkleClaim is Ownable {
                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function setMerkleRoot(uint256 proposalId, bytes32 root) external onlyOwner {
+    function setMerkleRoot(
+        uint256 proposalId,
+        bytes32 root
+    ) external onlyOwner {
         if (s_rootLocked[proposalId]) revert MerkleRootLocked(proposalId);
         s_merkleRoots[proposalId] = root;
         emit RootUpdated(proposalId, root);
     }
 
-    function claim(uint256 proposalId, string calldata code, bytes32[] calldata proof)
-        external
-        returns (uint256 tokenId)
-    {
+    function claim(
+        uint256 proposalId,
+        string calldata code,
+        bytes32[] calldata proof
+    ) external returns (uint256 tokenId) {
         bytes32 root = s_merkleRoots[proposalId];
         require(root != bytes32(0), "Root not set");
 
